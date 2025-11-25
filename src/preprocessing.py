@@ -17,7 +17,7 @@ import cv2
 class ImagePreprocessor:
     """Handles image preprocessing and data augmentation"""
     
-    def __init__(self, img_size=(224, 224), batch_size=32):
+    def __init__(self, img_size=(160, 160), batch_size=32):
         """
         Initialize preprocessor
         

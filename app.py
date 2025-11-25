@@ -30,21 +30,79 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Custom CSS - Improved visibility and standard web navigation
 st.markdown("""
     <style>
     .main-header {
-        font-size: 3rem;
+        font-size: 2.5rem;
         font-weight: bold;
         color: #1f77b4;
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
     }
     .metric-card {
         background-color: #f0f2f6;
         padding: 1rem;
         border-radius: 0.5rem;
         margin: 0.5rem 0;
+    }
+    
+    /* Navigation - Standard Web App Style */
+    /* Make radio buttons more visible */
+    div[data-testid="stRadio"] > div {
+        background-color: #ffffff;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        margin: 0.5rem 0;
+        border: 2px solid #e0e0e0;
+        transition: all 0.3s ease;
+    }
+    div[data-testid="stRadio"] > div:hover {
+        background-color: #f0f7ff;
+        border-color: #1f77b4;
+        transform: translateX(5px);
+    }
+    /* Selected radio button - very visible */
+    div[data-testid="stRadio"] > div[aria-checked="true"] {
+        background-color: #1f77b4 !important;
+        border-color: #1f77b4 !important;
+        color: white !important;
+        font-weight: bold;
+    }
+    div[data-testid="stRadio"] > div[aria-checked="true"] > label {
+        color: white !important;
+        font-weight: bold;
+    }
+    /* Radio button labels - always visible */
+    div[data-testid="stRadio"] > div > label {
+        color: #262730;
+        font-size: 1rem;
+        font-weight: 500;
+        padding: 0.5rem;
+        cursor: pointer;
+    }
+    div[data-testid="stRadio"] > div[aria-checked="true"] > label {
+        color: white !important;
+    }
+    /* Radio button circle - visible */
+    div[data-testid="stRadio"] div[data-baseweb="radio"] {
+        border: 2px solid #1f77b4;
+        background-color: white;
+    }
+    div[data-testid="stRadio"] div[aria-checked="true"] div[data-baseweb="radio"] {
+        background-color: white !important;
+        border-color: white !important;
+    }
+    
+    /* Sidebar improvements */
+    section[data-testid="stSidebar"] {
+        background-color: #f8f9fa;
+    }
+    
+    /* Hide app icon if too prominent */
+    .stApp > header {
+        visibility: hidden;
+        height: 0;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -69,14 +127,46 @@ def get_model_uptime():
 
 # Sidebar
 with st.sidebar:
-    st.title("🍎 VendorClose AI")
+    # Header with basket icon instead of apple
+    st.markdown("""
+    <div style="text-align: center; padding: 1rem 0;">
+        <h1 style="font-size: 1.8rem; margin: 0;">🛒 VendorClose AI</h1>
+        <p style="color: #666; font-size: 0.9rem; margin: 0.5rem 0;">Smart Fruit Scanner</p>
+    </div>
+    """, unsafe_allow_html=True)
     st.markdown("---")
     
-    # Navigation
-    page = st.radio(
-        "Navigation",
-        ["📸 Quick Scan", "📦 Batch Processing", "📊 Dashboard", "🔄 Retraining", "📤 Upload Data"]
+    # Navigation - Standard web app style with visible links
+    st.markdown("### 🧭 Navigation")
+    
+    if 'current_page' not in st.session_state:
+        st.session_state.current_page = "Quick Scan"
+    
+    # Navigation options - clean text without emojis for better visibility
+    nav_options = {
+        "Quick Scan": "📸",
+        "Batch Processing": "📦",
+        "Dashboard": "📊",
+        "Retraining": "🔄",
+        "Upload Data": "📤"
+    }
+    
+    # Create navigation with visible buttons
+    nav_items = list(nav_options.keys())
+    current_index = nav_items.index(st.session_state.current_page) if st.session_state.current_page in nav_items else 0
+    
+    selected = st.radio(
+        "Choose a page",
+        nav_items,
+        index=current_index,
+        label_visibility="visible"
     )
+    
+    if selected != st.session_state.current_page:
+        st.session_state.current_page = selected
+        st.rerun()
+    
+    page = f"{nav_options[selected]} {selected}" if selected in nav_options else selected
     
     st.markdown("---")
     
@@ -94,12 +184,12 @@ with st.sidebar:
             pass
 
 
-# Main content
-st.markdown('<h1 class="main-header">🍎 VendorClose AI</h1>', unsafe_allow_html=True)
-st.markdown('<p style="text-align: center; font-size: 1.2rem;">Smart End-of-Day Fruit Scanner</p>', unsafe_allow_html=True)
+# Main content - Removed prominent icon
+st.markdown('<h1 class="main-header">🛒 VendorClose AI</h1>', unsafe_allow_html=True)
+st.markdown('<p style="text-align: center; font-size: 1.1rem; color: #666;">Smart End-of-Day Fruit Scanner</p>', unsafe_allow_html=True)
 
 # Quick Scan Page
-if page == "📸 Quick Scan":
+if "Quick Scan" in page or page == "📸 Quick Scan":
     st.header("📸 Quick Scan - Single Fruit Analysis")
     
     uploaded_file = st.file_uploader(
@@ -129,50 +219,73 @@ if page == "📸 Quick Scan":
                             
                             st.subheader("Analysis Results")
                             
-                            # Class and confidence
-                            class_name = result['class'].upper()
-                            confidence = result['confidence']
+                            # Class and confidence - handle both 'class' and 'class_name'
+                            class_name = result.get('class_name', result.get('class', 'unknown'))
+                            if isinstance(class_name, str):
+                                class_name = class_name.upper()
+                            confidence = result.get('confidence', 0.0)
                             
-                            # Color coding
-                            if result['class'] == 'fresh':
+                            # Color coding - supports all 19 classes
+                            class_lower = str(class_name).lower()
+                            if 'fresh' in class_lower:
                                 color = "🟢"
                                 st.success(f"{color} **Quality:** {class_name}")
-                            elif result['class'] == 'medium':
+                            elif 'medium' in class_lower:
                                 color = "🟡"
                                 st.warning(f"{color} **Quality:** {class_name}")
-                            else:
+                            elif 'rotten' in class_lower:
                                 color = "🔴"
                                 st.error(f"{color} **Quality:** {class_name}")
+                            else:
+                                st.info(f"**Quality:** {class_name}")
                             
                             st.metric("Confidence", f"{confidence:.2%}")
                             
                             # Action recommendation
-                            st.info(f"**Action:** {result['action']}")
+                            action = result.get('action', 'No recommendation available')
+                            st.info(f"**Action:** {action}")
                             
-                            # Probabilities
-                            st.subheader("Class Probabilities")
-                            prob_df = pd.DataFrame(
-                                list(result['probabilities'].items()),
-                                columns=['Class', 'Probability']
-                            )
-                            prob_df['Probability'] = prob_df['Probability'].apply(lambda x: f"{x:.2%}")
-                            st.dataframe(prob_df, use_container_width=True)
-                            
-                            # Probability bar chart
-                            fig = px.bar(
-                                prob_df,
-                                x='Class',
-                                y=prob_df['Probability'].str.rstrip('%').astype('float') / 100,
-                                labels={'y': 'Probability'},
-                                color='Class',
-                                color_discrete_map={
-                                    'fresh': 'green',
-                                    'medium': 'orange',
-                                    'rotten': 'red'
-                                }
-                            )
-                            fig.update_layout(showlegend=False, yaxis_tickformat='.0%')
-                            st.plotly_chart(fig, use_container_width=True)
+                            # Probabilities - handle 19 classes
+                            probabilities = result.get('probabilities', {})
+                            if probabilities:
+                                st.subheader("Class Probabilities")
+                                prob_df = pd.DataFrame(
+                                    list(probabilities.items()),
+                                    columns=['Class', 'Probability']
+                                )
+                                # Convert probability values
+                                prob_df['Probability'] = prob_df['Probability'].apply(
+                                    lambda x: float(x) if isinstance(x, (int, float)) else 0.0
+                                )
+                                prob_df['Probability_Display'] = prob_df['Probability'].apply(lambda x: f"{x:.2%}")
+                                
+                                # Sort by probability
+                                prob_df = prob_df.sort_values('Probability', ascending=False)
+                                st.dataframe(prob_df[['Class', 'Probability_Display']].rename(columns={'Probability_Display': 'Probability'}), use_container_width=True)
+                                
+                                # Probability bar chart - color by quality
+                                def get_color(class_name):
+                                    class_lower = str(class_name).lower()
+                                    if 'fresh' in class_lower:
+                                        return 'green'
+                                    elif 'medium' in class_lower:
+                                        return 'orange'
+                                    elif 'rotten' in class_lower:
+                                        return 'red'
+                                    return 'gray'
+                                
+                                prob_df['Color'] = prob_df['Class'].apply(get_color)
+                                
+                                fig = px.bar(
+                                    prob_df.head(10),  # Show top 10
+                                    x='Class',
+                                    y='Probability',
+                                    labels={'Probability': 'Probability'},
+                                    color='Color',
+                                    color_discrete_map='identity'
+                                )
+                                fig.update_layout(showlegend=False, yaxis_tickformat='.0%', height=400)
+                                st.plotly_chart(fig, use_container_width=True)
                         else:
                             st.error(f"Error: {response.text}")
                     except Exception as e:
@@ -181,7 +294,7 @@ if page == "📸 Quick Scan":
 
 
 # Batch Processing Page
-elif page == "📦 Batch Processing":
+elif "Batch Processing" in page or page == "📦 Batch Processing":
     st.header("📦 Batch Processing - Multiple Fruits")
     
     uploaded_files = st.file_uploader(
@@ -217,11 +330,12 @@ elif page == "📦 Batch Processing":
                         # Process results
                         for pred in predictions:
                             if 'error' not in pred:
+                                class_name = pred.get('class_name', pred.get('class', 'Unknown'))
                                 results.append({
                                     'Image': pred.get('filename', 'Unknown'),
-                                    'Quality': pred['class'].upper(),
-                                    'Confidence': f"{pred['confidence']:.2%}",
-                                    'Action': pred['action']
+                                    'Quality': str(class_name).upper(),
+                                    'Confidence': f"{pred.get('confidence', 0.0):.2%}",
+                                    'Action': pred.get('action', 'No recommendation')
                                 })
                         
                         # Display results table
@@ -250,10 +364,10 @@ elif page == "📦 Batch Processing":
                             # Priority action list
                             st.subheader("🎯 Priority Action List")
                             
-                            # Group by action
-                            sell_now = df[df['Action'].str.contains('Sell now')]
-                            keep = df[df['Action'].str.contains('Keep overnight')]
-                            remove = df[df['Action'].str.contains('Remove/discard')]
+                            # Group by action - handle 19 classes
+                            sell_now = df[df['Action'].str.contains('Sell now', case=False, na=False)]
+                            keep = df[df['Action'].str.contains('Keep overnight', case=False, na=False)]
+                            remove = df[df['Action'].str.contains('Remove|discard', case=False, na=False)]
                             
                             if len(remove) > 0:
                                 st.error(f"❌ **Remove/Discard ({len(remove)}):** Priority - Remove these immediately")
@@ -273,7 +387,7 @@ elif page == "📦 Batch Processing":
 
 
 # Dashboard Page
-elif page == "📊 Dashboard":
+elif "Dashboard" in page or page == "📊 Dashboard":
     st.header("📊 Business Dashboard")
     
     if not check_api_health():
@@ -349,7 +463,7 @@ elif page == "📊 Dashboard":
 
 
 # Retraining Page
-elif page == "🔄 Retraining":
+elif "Retraining" in page or page == "🔄 Retraining":
     st.header("🔄 Model Retraining")
     
     if not check_api_health():
@@ -411,16 +525,36 @@ elif page == "🔄 Retraining":
 
 
 # Upload Data Page
-elif page == "📤 Upload Data":
+elif "Upload Data" in page or page == "📤 Upload Data":
     st.header("📤 Upload Training Data")
     
     st.write("Upload new fruit images to improve the model through retraining.")
     
-    # Class selection
+    # Class selection - All 19 classes supported
+    all_classes = [
+        'freshapples', 'freshbanana', 'freshbittergroud', 'freshcapsicum',
+        'freshcucumber', 'freshokra', 'freshoranges', 'freshpotato', 'freshtomato',
+        'rottenapples', 'rottenbanana', 'rottenbittergroud', 'rottencapsicum',
+        'rottencucumber', 'rottenokra', 'rottenoranges', 'rottenpotato', 'rottentomato',
+        'medium'
+    ]
+    
+    def format_class_name(class_name):
+        """Format class name for display"""
+        if class_name == 'medium':
+            return 'Medium Quality'
+        name = class_name.replace('fresh', 'Fresh ').replace('rotten', 'Rotten ')
+        # Capitalize first letter of fruit name
+        parts = name.split()
+        if len(parts) > 1:
+            parts[1] = parts[1].capitalize()
+        return ' '.join(parts)
+    
     class_label = st.selectbox(
         "Select Fruit Quality Class",
-        ["fresh", "medium", "rotten"],
-        help="Select the quality class for the images you're uploading"
+        all_classes,
+        help="Select the specific fruit type and quality for the images you're uploading",
+        format_func=format_class_name
     )
     
     # File uploader

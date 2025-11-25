@@ -137,7 +137,7 @@ class FruitQualityClassifier:
             ]
         )
     
-    def train(self, train_generator, val_generator, epochs=50, batch_size=32):
+    def train(self, train_generator, val_generator, epochs=50, batch_size=32, early_stopping_patience=None):
         """
         Train the model with callbacks for optimization
         
@@ -146,6 +146,7 @@ class FruitQualityClassifier:
             val_generator: Validation data generator
             epochs: Maximum number of epochs
             batch_size: Batch size
+            early_stopping_patience: Patience for early stopping (default: 10, or 5 if epochs <= 10)
             
         Returns:
             Training history
@@ -153,12 +154,17 @@ class FruitQualityClassifier:
         if self.model is None:
             raise ValueError("Model must be built and compiled before training")
         
+        # Adjust early stopping patience based on epochs
+        # For fast retraining (10 epochs), use patience=5 to allow early stopping
+        if early_stopping_patience is None:
+            early_stopping_patience = 5 if epochs <= 10 else 10
+        
         # Callbacks for optimization
         callbacks = [
             # Early stopping (prevents overfitting)
             EarlyStopping(
                 monitor='val_loss',
-                patience=10,  # Stop if no improvement for 10 epochs
+                patience=early_stopping_patience,  # Stop if no improvement
                 restore_best_weights=True,
                 verbose=1
             ),

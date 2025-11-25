@@ -201,22 +201,37 @@ async def predict_batch(files: List[UploadFile] = File(...)):
 @app.post("/upload", response_model=UploadResponse)
 async def upload_training_data(
     files: List[UploadFile] = File(...),
-    class_label: str = "fresh"
+    class_label: str = "freshapples"
 ):
     """
     Upload training images for retraining
     
     Args:
         files: List of image files
-        class_label: Class label (fresh/medium/rotten)
+        class_label: Class label - can be:
+            - Simple: 'fresh', 'medium', 'rotten' (creates generic folders)
+            - Specific: 'freshapples', 'rottenbanana', etc. (19 classes supported)
+            Supported classes: freshapples, freshbanana, freshbittergroud, freshcapsicum,
+            freshcucumber, freshokra, freshoranges, freshpotato, freshtomato,
+            rottenapples, rottenbanana, rottenbittergroud, rottencapsicum,
+            rottencucumber, rottenokra, rottenoranges, rottenpotato, rottentomato, medium
         
     Returns:
         Upload confirmation
     """
-    if class_label not in ['fresh', 'medium', 'rotten']:
+    # Valid class labels (19 specific classes + 3 generic)
+    valid_classes = [
+        'freshapples', 'freshbanana', 'freshbittergroud', 'freshcapsicum',
+        'freshcucumber', 'freshokra', 'freshoranges', 'freshpotato', 'freshtomato',
+        'rottenapples', 'rottenbanana', 'rottenbittergroud', 'rottencapsicum',
+        'rottencucumber', 'rottenokra', 'rottenoranges', 'rottenpotato', 'rottentomato',
+        'medium', 'fresh', 'rotten'  # Generic classes for backward compatibility
+    ]
+    
+    if class_label not in valid_classes:
         raise HTTPException(
             status_code=400, 
-            detail="class_label must be 'fresh', 'medium', or 'rotten'"
+            detail=f"class_label must be one of: {', '.join(valid_classes[:5])}... (19 classes supported)"
         )
     
     uploaded_count = 0
@@ -288,8 +303,9 @@ def retrain_model(session_id: str):
         retraining_status["progress"] = 30
         retraining_status["message"] = "Creating data generators..."
         
-        # Create data generators
-        preprocessor = ImagePreprocessor(img_size=(160, 160), batch_size=32)
+        # Create data generators with optimized settings (same as initial training)
+        # Using batch_size=128 for faster training, img_size=160x160
+        preprocessor = ImagePreprocessor(img_size=(160, 160), batch_size=128)
         train_gen, val_gen, _ = preprocessor.create_data_generators(
             train_dir=str(TRAIN_DIR),
             val_dir=str(TRAIN_DIR)
@@ -302,24 +318,29 @@ def retrain_model(session_id: str):
         num_classes = len(train_gen.class_indices)
         print(f"Detected {num_classes} classes for retraining")
         
-        # Build and compile model
+        # Build and compile model (same settings as initial training)
         classifier = FruitQualityClassifier(
             num_classes=num_classes,  # Use detected number of classes
-            img_size=(160, 160),
+            img_size=(160, 160),  # Same as initial training
             learning_rate=0.001
         )
         classifier.build_model(use_pretrained=True)
         classifier.compile_model(optimizer_name='adam')
         
         retraining_status["progress"] = 50
-        retraining_status["message"] = "Training model..."
+        retraining_status["message"] = "Training model (10 epochs, early stopping enabled)..."
         
-        # Train model
+        # Train model with optimized settings:
+        # - 10 epochs (fast retraining)
+        # - batch_size=128 (faster training)
+        # - Early stopping with patience=5 (stops if no improvement for 5 epochs)
+        # - Same techniques as initial training
         history = classifier.train(
             train_generator=train_gen,
             val_generator=val_gen,
-            epochs=30,
-            batch_size=32
+            epochs=10,  # Fast retraining with 10 epochs
+            batch_size=128,  # Larger batch for faster training
+            early_stopping_patience=5  # Stop early if no improvement for 5 epochs
         )
         
         retraining_status["progress"] = 80
