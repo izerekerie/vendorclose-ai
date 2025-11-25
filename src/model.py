@@ -17,7 +17,7 @@ import numpy as np
 class FruitQualityClassifier:
     """CNN Classifier for fruit quality (Fresh/Medium/Rotten)"""
     
-    def __init__(self, num_classes=3, img_size=(224, 224), learning_rate=0.001):
+    def __init__(self, num_classes=3, img_size=(160, 160), learning_rate=0.001):
         """
         Initialize classifier
         

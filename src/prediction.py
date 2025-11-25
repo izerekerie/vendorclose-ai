@@ -14,33 +14,97 @@ from src.preprocessing import ImagePreprocessor
 class FruitPredictor:
     """Handles fruit quality predictions"""
     
-    def __init__(self, model_path=None, img_size=(224, 224)):
+    def __init__(self, model_path=None, img_size=(160, 160), data_dir=None):
         """
         Initialize predictor
         
         Args:
             model_path: Path to saved model file
             img_size: Image size for preprocessing
+            data_dir: Path to data directory to infer class names (optional)
         """
         self.model_path = model_path
         self.model = None
         self.preprocessor = ImagePreprocessor(img_size=img_size)
-        self.class_names = ['fresh', 'medium', 'rotten']
+        self.data_dir = data_dir
+        self.class_names = None  # Will be set dynamically
         self.action_map = {
             'fresh': '✅ Keep overnight (Fresh - still good tomorrow)',
             'medium': '⚠️ Sell now with discount (Medium - borderline quality)',
             'rotten': '❌ Remove/discard (Rotten - will contaminate others)'
         }
+        # Extended action map for specific fruit types
+        self._extended_action_map = {}
     
-    def load_model(self, model_path=None):
+    def _detect_class_names(self):
+        """Detect class names from model output or data directory"""
+        if self.class_names is not None:
+            return
+        
+        # Try to get from data directory first
+        if self.data_dir:
+            train_dir = Path(self.data_dir) / 'train'
+            if train_dir.exists():
+                class_dirs = [d for d in train_dir.iterdir() if d.is_dir()]
+                if class_dirs:
+                    self.class_names = sorted([d.name for d in class_dirs])
+                    print(f"Detected {len(self.class_names)} classes from data directory: {self.class_names[:5]}...")
+                    return
+        
+        # If model is loaded, infer from model output shape
+        if self.model is not None:
+            try:
+                output_shape = self.model.output_shape
+                if output_shape and len(output_shape) > 1:
+                    num_classes = output_shape[-1]
+                    # Try to get from model metadata if available
+                    if hasattr(self.model, 'class_names'):
+                        self.class_names = self.model.class_names
+                    else:
+                        # Generate generic class names based on count
+                        if num_classes == 3:
+                            self.class_names = ['fresh', 'medium', 'rotten']
+                        else:
+                            # For multi-class, we'll need to infer from data or use indices
+                            self.class_names = [f'class_{i}' for i in range(num_classes)]
+                    print(f"Detected {len(self.class_names)} classes from model output shape")
+                    return
+            except Exception as e:
+                print(f"Warning: Could not detect classes from model: {e}")
+        
+        # Fallback to default 3 classes
+        if self.class_names is None:
+            self.class_names = ['fresh', 'medium', 'rotten']
+            print("Warning: Using default 3 classes. Provide data_dir for accurate class names.")
+    
+    def _get_action(self, class_name):
+        """Get action recommendation for a class"""
+        # Check if it's a simple quality class
+        if class_name in self.action_map:
+            return self.action_map[class_name]
+        
+        # For specific fruit types, determine action based on prefix
+        if class_name.startswith('fresh'):
+            return '✅ Keep overnight (Fresh - still good tomorrow)'
+        elif class_name.startswith('rotten'):
+            return '❌ Remove/discard (Rotten - will contaminate others)'
+        elif class_name == 'medium':
+            return '⚠️ Sell now with discount (Medium - borderline quality)'
+        else:
+            return f'Classified as: {class_name}'
+    
+    def load_model(self, model_path=None, data_dir=None):
         """
         Load model from file
         
         Args:
             model_path: Path to model file (optional if set in __init__)
+            data_dir: Path to data directory to infer class names (optional)
         """
         if model_path:
             self.model_path = model_path
+        if data_dir:
+            self.data_dir = data_dir
         
         if not self.model_path:
             raise ValueError("Model path must be provided")
@@ -50,6 +114,9 @@ class FruitPredictor:
         
         self.model = keras.models.load_model(self.model_path)
         print(f"Model loaded from {self.model_path}")
+        
+        # Detect class names after loading model
+        self._detect_class_names()
     
     def predict_single(self, image_path):
         """
@@ -72,11 +139,17 @@ class FruitPredictor:
         predicted_class_idx = np.argmax(predictions[0])
         confidence = float(predictions[0][predicted_class_idx])
         
+        # Ensure class names are detected
+        self._detect_class_names()
+        
         # Get class name
-        predicted_class = self.class_names[predicted_class_idx]
+        if predicted_class_idx < len(self.class_names):
+            predicted_class = self.class_names[predicted_class_idx]
+        else:
+            predicted_class = f'class_{predicted_class_idx}'
         
         # Get action recommendation
-        action = self.action_map.get(predicted_class, 'Unknown')
+        action = self._get_action(predicted_class)
         
         return {
             'class': predicted_class,
@@ -133,11 +206,17 @@ class FruitPredictor:
         predicted_class_idx = np.argmax(predictions[0])
         confidence = float(predictions[0][predicted_class_idx])
         
+        # Ensure class names are detected
+        self._detect_class_names()
+        
         # Get class name
-        predicted_class = self.class_names[predicted_class_idx]
+        if predicted_class_idx < len(self.class_names):
+            predicted_class = self.class_names[predicted_class_idx]
+        else:
+            predicted_class = f'class_{predicted_class_idx}'
         
         # Get action recommendation
-        action = self.action_map.get(predicted_class, 'Unknown')
+        action = self._get_action(predicted_class)
         
         return {
             'class': predicted_class,

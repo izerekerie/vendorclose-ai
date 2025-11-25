@@ -52,12 +52,13 @@ TRAIN_DIR = Path("data/train")
 UPLOAD_DIR.mkdir(exist_ok=True)
 TRAIN_DIR.mkdir(exist_ok=True)
 
-# Initialize predictor
-predictor = FruitPredictor(model_path=MODEL_PATH)
+# Initialize predictor with data directory for class detection
+predictor = FruitPredictor(model_path=MODEL_PATH, data_dir=str(Path("data")))
 try:
     if os.path.exists(MODEL_PATH):
-        predictor.load_model()
+        predictor.load_model(data_dir=str(Path("data")))
         model_loaded = True
+        print(f"Model loaded with {len(predictor.class_names)} classes: {predictor.class_names[:5]}...")
     else:
         model_loaded = False
         print(f"Warning: Model not found at {MODEL_PATH}")
@@ -288,7 +289,7 @@ def retrain_model(session_id: str):
         retraining_status["message"] = "Creating data generators..."
         
         # Create data generators
-        preprocessor = ImagePreprocessor(img_size=(224, 224), batch_size=32)
+        preprocessor = ImagePreprocessor(img_size=(160, 160), batch_size=32)
         train_gen, val_gen, _ = preprocessor.create_data_generators(
             train_dir=str(TRAIN_DIR),
             val_dir=str(TRAIN_DIR)
@@ -297,10 +298,14 @@ def retrain_model(session_id: str):
         retraining_status["progress"] = 40
         retraining_status["message"] = "Building model..."
         
+        # Get number of classes from data generator
+        num_classes = len(train_gen.class_indices)
+        print(f"Detected {num_classes} classes for retraining")
+        
         # Build and compile model
         classifier = FruitQualityClassifier(
-            num_classes=3,
-            img_size=(224, 224),
+            num_classes=num_classes,  # Use detected number of classes
+            img_size=(160, 160),
             learning_rate=0.001
         )
         classifier.build_model(use_pretrained=True)
@@ -326,7 +331,7 @@ def retrain_model(session_id: str):
         
         # Update global predictor
         global predictor
-        predictor.load_model(model_path)
+        predictor.load_model(model_path, data_dir=str(TRAIN_DIR.parent))
         
         retraining_status["progress"] = 90
         retraining_status["message"] = "Evaluating model..."
