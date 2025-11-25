@@ -19,90 +19,162 @@ import io
 # Add src to path
 sys.path.append(str(Path(__file__).parent))
 
-# API configuration
+# API configuration - Use environment variable for production
+# Set in Streamlit Cloud secrets or Render environment variables
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 # Page configuration
 st.set_page_config(
     page_title="VendorClose AI",
-    page_icon="🍎",
+    page_icon="🛒",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS - Improved visibility and standard web navigation
+# Custom CSS - Dark Mode with High Contrast
 st.markdown("""
     <style>
+    /* Dark Mode Base */
+    .stApp {
+        background-color: #0e1117;
+        color: #fafafa;
+    }
+    
+    /* Main content area */
+    .main .block-container {
+        background-color: #0e1117;
+        color: #fafafa;
+    }
+    
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;
-        color: #1f77b4;
+        color: #f7812a;
         text-align: center;
         margin-bottom: 1rem;
     }
+    
     .metric-card {
-        background-color: #f0f2f6;
+        background-color: #1e2130;
         padding: 1rem;
         border-radius: 0.5rem;
         margin: 0.5rem 0;
+        border: 1px solid #2d3142;
     }
     
-    /* Navigation - Standard Web App Style */
-    /* Make radio buttons more visible */
+    /* Sidebar - Dark Mode */
+    section[data-testid="stSidebar"] {
+        background-color: #1e2130 !important;
+        border-right: 1px solid #2d3142;
+    }
+    
+    section[data-testid="stSidebar"] > div {
+        background-color: #1e2130 !important;
+    }
+    
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3,
+    section[data-testid="stSidebar"] p {
+        color: #fafafa !important;
+    }
+    
+    /* Navigation - Dark Mode with High Contrast */
     div[data-testid="stRadio"] > div {
-        background-color: #ffffff;
+        background-color: #1e2130 !important;
         padding: 0.75rem 1rem;
         border-radius: 0.5rem;
         margin: 0.5rem 0;
-        border: 2px solid #e0e0e0;
+        border: 2px solid #2d3142 !important;
         transition: all 0.3s ease;
     }
+    
     div[data-testid="stRadio"] > div:hover {
-        background-color: #f0f7ff;
-        border-color: #1f77b4;
+        background-color: #2d3142 !important;
+        border-color: #f7812a !important;
         transform: translateX(5px);
     }
-    /* Selected radio button - very visible */
+    
+    /* Selected radio button - Orange/High Contrast */
     div[data-testid="stRadio"] > div[aria-checked="true"] {
-        background-color: #1f77b4 !important;
-        border-color: #1f77b4 !important;
-        color: white !important;
+        background-color: #f7812a !important;
+        border-color: #f7812a !important;
+        color: #0e1117 !important;
         font-weight: bold;
     }
-    div[data-testid="stRadio"] > div[aria-checked="true"] > label {
-        color: white !important;
-        font-weight: bold;
-    }
-    /* Radio button labels - always visible */
+    
+    /* Radio button labels - Always visible in dark mode */
     div[data-testid="stRadio"] > div > label {
-        color: #262730;
+        color: #fafafa !important;
         font-size: 1rem;
         font-weight: 500;
         padding: 0.5rem;
         cursor: pointer;
     }
+    
     div[data-testid="stRadio"] > div[aria-checked="true"] > label {
-        color: white !important;
-    }
-    /* Radio button circle - visible */
-    div[data-testid="stRadio"] div[data-baseweb="radio"] {
-        border: 2px solid #1f77b4;
-        background-color: white;
-    }
-    div[data-testid="stRadio"] div[aria-checked="true"] div[data-baseweb="radio"] {
-        background-color: white !important;
-        border-color: white !important;
+        color: #0e1117 !important;
+        font-weight: bold;
     }
     
-    /* Sidebar improvements */
-    section[data-testid="stSidebar"] {
-        background-color: #f8f9fa;
+    /* Radio button circle - Visible */
+    div[data-testid="stRadio"] div[data-baseweb="radio"] {
+        border: 2px solid #f7812a;
+        background-color: #1e2130;
+    }
+    
+    div[data-testid="stRadio"] div[aria-checked="true"] div[data-baseweb="radio"] {
+        background-color: #0e1117 !important;
+        border-color: #0e1117 !important;
+    }
+    
+    /* All text elements - Dark mode */
+    .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6 {
+        color: #fafafa !important;
+    }
+    
+    /* Input fields - Dark mode */
+    .stTextInput > div > div > input,
+    .stSelectbox > div > div > select {
+        background-color: #1e2130 !important;
+        color: #fafafa !important;
+        border-color: #2d3142 !important;
+    }
+    
+    /* Buttons - Dark mode */
+    .stButton > button {
+        background-color: #f7812a !important;
+        color: #0e1117 !important;
+        border: none;
+        font-weight: bold;
+    }
+    
+    .stButton > button:hover {
+        background-color: #ff9a4d !important;
+    }
+    
+    /* File uploader - Dark mode */
+    .uploadedFile {
+        background-color: #1e2130 !important;
+        border-color: #2d3142 !important;
+    }
+    
+    /* Dataframes - Dark mode */
+    .dataframe {
+        background-color: #1e2130 !important;
+        color: #fafafa !important;
     }
     
     /* Hide app icon if too prominent */
     .stApp > header {
         visibility: hidden;
         height: 0;
+    }
+    
+    /* Status indicators */
+    .stSuccess, .stInfo, .stWarning, .stError {
+        background-color: #1e2130 !important;
+        border-left: 4px solid;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -184,9 +256,9 @@ with st.sidebar:
             pass
 
 
-# Main content - Removed prominent icon
+# Main content - Dark mode styling
 st.markdown('<h1 class="main-header">🛒 VendorClose AI</h1>', unsafe_allow_html=True)
-st.markdown('<p style="text-align: center; font-size: 1.1rem; color: #666;">Smart End-of-Day Fruit Scanner</p>', unsafe_allow_html=True)
+st.markdown('<p style="text-align: center; font-size: 1.1rem; color: #b0b0b0;">Smart End-of-Day Fruit Scanner</p>', unsafe_allow_html=True)
 
 # Quick Scan Page
 if "Quick Scan" in page or page == "📸 Quick Scan":

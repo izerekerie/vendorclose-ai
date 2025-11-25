@@ -4,48 +4,19 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual environments
-venv/
 env/
+venv/
 ENV/
-env.bak/
-venv.bak/
+.venv
 
-# Jupyter Notebook
-.ipynb_checkpoints
-*.ipynb_checkpoints
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Model files
+# Model files (large)
+*.h5
+*.hdf5
 models/*.h5
-models/*.pkl
-models/*.tf
-models/*.pb
+models/*.hdf5
 !models/.gitkeep
 
-# Data
+# Data (exclude from repo)
 data/train/*
 data/test/*
 !data/train/.gitkeep
@@ -68,15 +39,31 @@ logs/*
 .env
 .env.local
 
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
 # OS
 .DS_Store
 Thumbs.db
 
-# Docker
-.dockerignore
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
 
 # Temporary files
 *.tmp
-*.log
-*.cache
+*.temp
+*.bak
 
+# Coverage
+.coverage
+htmlcov/
+
+# Distribution
+dist/
+build/
+*.egg-info/

@@ -1,0 +1,35 @@
+# Render Configuration for VendorClose AI
+# Deploy both backend and frontend on Render
+
+services:
+  # Backend API Service
+  - type: web
+    name: vendorclose-api
+    env: python
+    runtime: python-3.12
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: PYTHON_VERSION
+        value: 3.12.0
+    healthCheckPath: /health
+    autoDeploy: true
+
+  # Frontend UI Service (Optional - can use Streamlit Cloud instead)
+  - type: web
+    name: vendorclose-ui
+    env: python
+    buildCommand: pip install streamlit plotly pandas Pillow requests
+    startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8501
+      - key: API_BASE_URL
+        fromService:
+          type: web
+          name: vendorclose-api
+          property: host

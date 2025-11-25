@@ -48,9 +48,11 @@ MODEL_PATH = "models/fruit_classifier.h5"
 UPLOAD_DIR = Path("uploads")
 TRAIN_DIR = Path("data/train")
 
-# Create directories
-UPLOAD_DIR.mkdir(exist_ok=True)
-TRAIN_DIR.mkdir(exist_ok=True)
+# Create directories (with parents=True to create parent directories)
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+TRAIN_DIR.mkdir(parents=True, exist_ok=True)
+Path("models").mkdir(parents=True, exist_ok=True)
+Path("logs").mkdir(parents=True, exist_ok=True)
 
 # Initialize predictor with data directory for class detection
 predictor = FruitPredictor(model_path=MODEL_PATH, data_dir=str(Path("data")))
