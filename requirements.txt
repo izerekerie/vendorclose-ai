@@ -1,0 +1,30 @@
+# Core ML and Data Processing
+tensorflow
+numpy
+pandas
+Pillow
+opencv-python
+
+# API Framework
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+
+# Web UI
+streamlit
+plotly
+
+# HTTP Client
+requests
+
+# Load Testing
+locust
+
+# Visualization and Analysis
+matplotlib
+seaborn
+scikit-learn
+
+# Utilities
+python-dotenv
