@@ -9,7 +9,8 @@ venv/
 ENV/
 .venv
 
-# Model files - Allow main model file (11.5MB is fine for Git)
+# Model files - ALL .h5 files are tracked (removed exclusions)
+
 # Data (exclude from repo - too large, not needed for deployment)
 data/train/*
 data/test/*
