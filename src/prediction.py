@@ -4,6 +4,7 @@ Handles model loading and predictions
 """
 
 import os
+import json
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -37,11 +38,22 @@ class FruitPredictor:
         self._extended_action_map = {}
     
     def _detect_class_names(self):
-        """Detect class names from model output or data directory"""
+        """Detect class names from JSON file, data directory, or model output"""
         if self.class_names is not None:
             return
         
-        # Try to get from data directory first
+        # First, try to load from JSON file (for deployment)
+        class_names_json = Path("models/class_names.json")
+        if class_names_json.exists():
+            try:
+                with open(class_names_json, 'r') as f:
+                    self.class_names = json.load(f)
+                print(f"✅ Loaded {len(self.class_names)} classes from class_names.json: {self.class_names[:5]}...")
+                return
+            except Exception as e:
+                print(f"Warning: Could not load class names from JSON: {e}")
+        
+        # Try to get from data directory (for local development)
         if self.data_dir:
             train_dir = Path(self.data_dir) / 'train'
             if train_dir.exists():
@@ -75,7 +87,7 @@ class FruitPredictor:
         # Fallback to default 3 classes
         if self.class_names is None:
             self.class_names = ['fresh', 'medium', 'rotten']
-            print("Warning: Using default 3 classes. Provide data_dir for accurate class names.")
+            print("Warning: Using default 3 classes. Provide data_dir or class_names.json for accurate class names.")
     
     def _get_action(self, class_name):
         """Get action recommendation for a class"""

@@ -7,6 +7,7 @@ import os
 import sys
 import uuid
 import shutil
+import json
 from pathlib import Path
 from datetime import datetime
 from typing import List, Optional
@@ -56,17 +57,50 @@ Path("logs").mkdir(parents=True, exist_ok=True)
 
 # Initialize predictor with data directory for class detection
 predictor = FruitPredictor(model_path=MODEL_PATH, data_dir=str(Path("data")))
-try:
-    if os.path.exists(MODEL_PATH):
+
+# Enhanced model loading with better diagnostics
+def load_model_with_diagnostics():
+    """Load model with detailed error reporting"""
+    global model_loaded
+
+    # Check if models directory exists
+    models_dir = Path("models")
+    if not models_dir.exists():
+        print(f"❌ Models directory not found: {models_dir.absolute()}")
+        return False
+
+    # Check if model file exists
+    model_path = Path(MODEL_PATH)
+    if not model_path.exists():
+        print(f"❌ Model file not found at: {model_path.absolute()}")
+        print(f"   Current working directory: {os.getcwd()}")
+        dir_contents = (list(models_dir.iterdir())
+                        if models_dir.exists() else 'N/A')
+        print(f"   Models directory contents: {dir_contents}")
+        return False
+
+    # Try to load model
+    try:
+        print(f"📦 Loading model from: {model_path.absolute()}")
+        file_size = model_path.stat().st_size / 1024 / 1024
+        print(f"   File size: {file_size:.2f} MB")
         predictor.load_model(data_dir=str(Path("data")))
         model_loaded = True
-        print(f"Model loaded with {len(predictor.class_names)} classes: {predictor.class_names[:5]}...")
-    else:
+        print("✅ Model loaded successfully!")
+        print(f"   Classes: {len(predictor.class_names)}")
+        class_preview = predictor.class_names[:5]
+        print(f"   Class names: {class_preview}...")
+        return True
+    except Exception as e:
+        print(f"❌ Error loading model: {e}")
+        import traceback
+        traceback.print_exc()
         model_loaded = False
-        print(f"Warning: Model not found at {MODEL_PATH}")
-except Exception as e:
-    print(f"Error loading model: {e}")
-    model_loaded = False
+        return False
+
+
+# Load model
+model_loaded = load_model_with_diagnostics()
 
 # Initialize database
 db = TrainingDataDB()
@@ -110,22 +144,44 @@ class StatusResponse(BaseModel):
 # Health check endpoint
 @app.get("/")
 async def root():
-    """Root endpoint"""
+    """Root endpoint with detailed model status"""
+    model_path = Path(MODEL_PATH)
+    model_exists = model_path.exists()
+    model_size = model_path.stat().st_size / 1024 / 1024 if model_exists else 0
+    
     return {
         "message": "VendorClose AI API",
         "version": "1.0.0",
         "model_loaded": model_loaded,
-        "status": "operational"
+        "model_path": str(model_path),
+        "model_exists": model_exists,
+        "model_size_mb": round(model_size, 2) if model_exists else None,
+        "status": "operational" if model_loaded else "model_missing",
+        "working_directory": os.getcwd(),
+        "models_directory_contents": [f.name for f in Path("models").iterdir()] if Path("models").exists() else []
     }
 
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
+    """Health check endpoint with model diagnostics"""
+    model_path = Path(MODEL_PATH)
+    model_exists = model_path.exists()
+    
+    health_status = "healthy" if model_loaded else "degraded"
+    
     return {
-        "status": "healthy",
+        "status": health_status,
         "model_loaded": model_loaded,
-        "timestamp": datetime.now().isoformat()
+        "model_exists": model_exists,
+        "model_path": str(model_path),
+        "model_absolute_path": str(model_path.absolute()) if model_exists else None,
+        "timestamp": datetime.now().isoformat(),
+        "diagnostics": {
+            "models_dir_exists": Path("models").exists(),
+            "model_file_exists": model_exists,
+            "working_directory": os.getcwd()
+        }
     }
 
 
@@ -351,6 +407,14 @@ def retrain_model(session_id: str):
         # Save model
         model_path = f"models/fruit_classifier_retrained_{session_id}.h5"
         classifier.save_model(model_path)
+        
+        # Save class names to JSON file (for deployment)
+        class_names = sorted(train_gen.class_indices.keys())
+        class_names_path = Path("models/class_names.json")
+        class_names_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(class_names_path, 'w') as f:
+            json.dump(class_names, f, indent=2)
+        print(f"✅ Saved {len(class_names)} class names to {class_names_path}")
         
         # Update global predictor
         global predictor

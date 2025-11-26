@@ -1,5 +1,4 @@
 # Render Configuration for VendorClose AI
-# Deploy both backend and frontend on Render
 
 services:
   # Backend API Service
