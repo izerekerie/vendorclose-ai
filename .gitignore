@@ -10,11 +10,6 @@ ENV/
 .venv
 
 # Model files - Allow main model file (11.5MB is fine for Git)
-*.h5
-*.hdf5
-models/*.h5
-!models/fruit_classifier.h5  # Include main model file
-
 # Data (exclude from repo - too large, not needed for deployment)
 data/train/*
 data/test/*
