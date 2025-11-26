@@ -23,8 +23,8 @@ class FruitPredictorUser(HttpUser):
     @task(3)
     def predict_single(self):
         """Single image prediction (most common task)"""
-        # Generate a dummy image
-        img = Image.new('RGB', (224, 224), color=(random.randint(0, 255), 
+        # Generate a dummy image (160x160 to match model input size)
+        img = Image.new('RGB', (160, 160), color=(random.randint(0, 255), 
                                                    random.randint(0, 255), 
                                                    random.randint(0, 255)))
         
@@ -43,7 +43,7 @@ class FruitPredictorUser(HttpUser):
         # Generate 3 dummy images
         files = []
         for i in range(3):
-            img = Image.new('RGB', (224, 224), color=(random.randint(0, 255), 
+            img = Image.new('RGB', (160, 160), color=(random.randint(0, 255), 
                                                        random.randint(0, 255), 
                                                        random.randint(0, 255)))
             img_bytes = io.BytesIO()
@@ -82,7 +82,7 @@ class RetrainingUser(HttpUser):
     @task(1)
     def upload_training_data(self):
         """Upload training data"""
-        img = Image.new('RGB', (224, 224), color=(100, 150, 200))
+        img = Image.new('RGB', (160, 160), color=(100, 150, 200))
         img_bytes = io.BytesIO()
         img.save(img_bytes, format='PNG')
         img_bytes.seek(0)

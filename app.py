@@ -21,7 +21,7 @@ sys.path.append(str(Path(__file__).parent))
 
 # API configuration - Use environment variable for production
 # Set in Streamlit Cloud secrets or Render environment variables
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://vendorclose-ai.onrender.com")
 
 # Page configuration
 st.set_page_config(
