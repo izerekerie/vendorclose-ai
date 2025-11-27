@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+
+# Data (large files)
+data/train/*
+data/test/*
+uploads/*
+logs/*
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Load test results
+load_test_results/
+*.html
+*.csv
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Documentation (not needed in container)
+*.md
+!README.md
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Other
+.env
+*.db
+*.sqlite
+

@@ -11,6 +11,9 @@ ENV/
 
 # Model files - ALL .h5 files are tracked (removed exclusions)
 
+# Class names mapping file (needed for deployment)
+!models/class_names.json
+
 # Data (exclude from repo - too large, not needed for deployment)
 data/train/*
 data/test/*
@@ -62,3 +65,8 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# Load test results
+load_test_results/
+*.html
+!*.md

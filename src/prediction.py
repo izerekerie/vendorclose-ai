@@ -43,15 +43,24 @@ class FruitPredictor:
             return
         
         # First, try to load from JSON file (for deployment)
-        class_names_json = Path("models/class_names.json")
-        if class_names_json.exists():
-            try:
-                with open(class_names_json, 'r') as f:
-                    self.class_names = json.load(f)
-                print(f"✅ Loaded {len(self.class_names)} classes from class_names.json: {self.class_names[:5]}...")
-                return
-            except Exception as e:
-                print(f"Warning: Could not load class names from JSON: {e}")
+        # Try multiple possible paths (for different deployment scenarios)
+        possible_json_paths = [
+            Path("models/class_names.json"),  # Relative to current working directory
+            Path(__file__).parent.parent / "models" / "class_names.json",  # Relative to this script
+            Path.cwd() / "models" / "class_names.json",  # Absolute from current working directory
+        ]
+        
+        for class_names_json in possible_json_paths:
+            if class_names_json.exists():
+                try:
+                    with open(class_names_json, 'r') as f:
+                        self.class_names = json.load(f)
+                    print(f"✅ Loaded {len(self.class_names)} classes from {class_names_json}: {self.class_names[:5]}...")
+                    return
+                except Exception as e:
+                    print(f"Warning: Could not load class names from {class_names_json}: {e}")
+        
+        print(f"⚠️ Could not find class_names.json in any of these locations: {[str(p) for p in possible_json_paths]}")
         
         # Try to get from data directory (for local development)
         if self.data_dir:

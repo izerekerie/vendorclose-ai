@@ -87,9 +87,24 @@ def load_model_with_diagnostics():
         predictor.load_model(data_dir=str(Path("data")))
         model_loaded = True
         print("✅ Model loaded successfully!")
-        print(f"   Classes: {len(predictor.class_names)}")
-        class_preview = predictor.class_names[:5]
-        print(f"   Class names: {class_preview}...")
+        
+        # Verify class names are loaded correctly
+        if predictor.class_names:
+            print(f"   Classes: {len(predictor.class_names)}")
+            class_preview = predictor.class_names[:5]
+            print(f"   Class names: {class_preview}...")
+            
+            # Check if we're getting generic class names (class_0, class_1, etc.)
+            if any(name.startswith('class_') for name in predictor.class_names):
+                print("   ⚠️ WARNING: Using generic class names! Check if class_names.json exists.")
+                print(f"   Current working directory: {os.getcwd()}")
+                json_path = Path("models/class_names.json")
+                print(f"   JSON file exists: {json_path.exists()}")
+                if json_path.exists():
+                    print(f"   JSON file absolute path: {json_path.absolute()}")
+        else:
+            print("   ⚠️ WARNING: No class names detected!")
+        
         return True
     except Exception as e:
         print(f"❌ Error loading model: {e}")

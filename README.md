@@ -214,45 +214,95 @@ Access the UI at: `http://localhost:8501`
 
 ## 🧪 Load Testing with Locust
 
-### Install Locust
+### Quick Test (Verify Locust Works)
+
+First, verify that Locust is installed and working:
 
 ```bash
-pip install locust
+python test_locust.py
 ```
 
-### Run Load Test
+This will:
+- ✅ Check if Locust is installed
+- ✅ Verify locustfile.py exists
+- ✅ Test API connection
+- ✅ Run a quick 10-second load test
+
+### Automated Load Testing Script
+
+Run comprehensive load tests with different container configurations:
 
 ```bash
+python run_load_tests.py
+```
+
+This script will:
+- 🐳 Start Docker containers (1, 2, or 3)
+- 🚀 Run Locust load tests automatically
+- 📊 Record latency and response times
+- 📈 Generate comparison reports
+- 🛑 Clean up containers after each test
+
+#### Customize Test Parameters
+
+```bash
+# Test with specific container counts
+python run_load_tests.py --containers 1 2 3
+
+# Adjust load parameters
+python run_load_tests.py --users 200 --spawn-rate 20 --run-time 5m
+
+# Custom results directory
+python run_load_tests.py --results-dir my_results
+```
+
+#### Default Configuration
+- **Users**: 100 concurrent users
+- **Spawn Rate**: 10 users/second
+- **Duration**: 2 minutes per test
+- **Containers**: Tests 1, 2, and 3 containers sequentially
+
+### Manual Locust Testing
+
+#### Interactive UI Mode
+
+```bash
+# Start API
+docker-compose up api
+
+# Start Locust UI
 locust -f locustfile.py --host=http://localhost:8000
 ```
 
 Access Locust UI at: `http://localhost:8089`
 
-### Test Scenarios
+#### Headless Mode
 
-1. **Single Container Test**
-   ```bash
-   # Start single API container
-   docker-compose up api
-   
-   # Run Locust with 100 users, 10 spawn rate
-   locust -f locustfile.py --host=http://localhost:8000 --users 100 --spawn-rate 10
-   ```
+```bash
+# Single container test
+docker-compose up api
+locust -f locustfile.py --host=http://localhost:8000 --users 100 --spawn-rate 10 --run-time 2m --headless
 
-2. **Multiple Containers Test**
-   ```bash
-   # Start 3 API containers
-   docker-compose up
-   
-   # Test each container separately or use load balancer
-   locust -f locustfile.py --host=http://localhost:8000 --users 200 --spawn-rate 20
-   ```
+# Multiple containers (test each port)
+docker-compose up
+locust -f locustfile.py --host=http://localhost:8000 --users 200 --spawn-rate 20 --run-time 2m --headless
+```
+
+### Test Results
+
+Results are saved in `load_test_results/` directory:
+- `test_1_containers_report.html` - HTML report for 1 container
+- `test_2_containers_report.html` - HTML report for 2 containers
+- `test_3_containers_report.html` - HTML report for 3 containers
+- `summary_report.json` - Comparison of all tests
+- CSV files with detailed statistics
 
 ### Expected Results
 
 - **Latency**: < 500ms for single predictions
 - **Throughput**: 50+ requests/second per container
 - **Error Rate**: < 1%
+- **Scaling**: Linear improvement with more containers
 
 ## 📈 Visualizations
 

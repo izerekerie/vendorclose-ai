@@ -5,15 +5,17 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+# Use a different mirror and add retries
+RUN echo "Acquire::Retries \"3\";" > /etc/apt/apt.conf.d/80-retries && \
+    apt-get update && apt-get install -y \
+    libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
+# Copy requirements FIRST (for better caching - if requirements don't change, this layer is cached!)
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies (TensorFlow installs here - cached if requirements.txt unchanged)
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
