@@ -38,7 +38,6 @@ logs/*
 .env.local
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
@@ -70,3 +69,4 @@ build/
 load_test_results/
 *.html
 !*.md
+.gitignore
