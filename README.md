@@ -19,7 +19,6 @@ Training data sourced from Kaggle:
 
 - **Dataset**: [Fruits Fresh and Rotten for Classification](https://www.kaggle.com/datasets/sriramr/fruits-fresh-and-rotten-for-classification)
 - Contains images of fresh and rotten fruits
-- The `medium` class is automatically created during preprocessing
 
 ## Features
 
