@@ -1,0 +1,7 @@
+Method,Name,Error,Occurrences
+GET,get_sessions,RemoteDisconnected('Remote end closed connection without response'),3
+POST,predict_single,CatchResponseError('HTTP 0'),6
+POST,predict_batch,CatchResponseError('HTTP 0'),2
+GET,health_check,RemoteDisconnected('Remote end closed connection without response'),2
+POST,upload_data,CatchResponseError('HTTP 0'),4
+GET,retrain_status,RemoteDisconnected('Remote end closed connection without response'),6
