@@ -6,7 +6,7 @@ A comprehensive machine learning pipeline for classifying fruit quality (Fresh/M
 
 **VendorClose AI** is an end-to-end ML system that:
 
-- Classifies fruit quality into 3 categories: Fresh, Medium (discount), Rotten
+- Classifies fruit quality across 18+ specific fruit types (apples, bananas, tomatoes, etc.) into 3 quality categories: Fresh, Medium (discount), Rotten
 - Provides instant single and batch predictions
 - Offers business insights through visualizations
 - Supports model retraining with new data
@@ -19,7 +19,6 @@ Training data sourced from Kaggle:
 
 - **Dataset**: [Fruits Fresh and Rotten for Classification](https://www.kaggle.com/datasets/sriramr/fruits-fresh-and-rotten-for-classification)
 - Contains images of fresh and rotten fruits
-- The `medium` class is automatically created during preprocessing
 
 ## Features
 
@@ -112,7 +111,11 @@ VendorClose_AI/
 - **Base Model**: MobileNetV2 (pretrained on ImageNet)
 - **Transfer Learning**: Yes
 - **Input Size**: 160x160x3
-- **Output Classes**: 3 (Fresh, Medium, Rotten)
+- **Output Classes**: 18+ specific fruit classes (e.g., freshapples, rottenbanana, etc.) grouped into 3 quality categories (Fresh, Medium, Rotten)
+- **Supported Classes**:
+  - Fresh: freshapples, freshbanana, freshbittergroud, freshcapsicum, freshcucumber, freshokra, freshoranges, freshpotato, freshtomato
+  - Rotten: rottenapples, rottenbanana, rottenbittergroud, rottencapsicum, rottencucumber, rottenokra, rottenoranges, rottenpotato, rottentomato
+  - Medium: medium (automatically created during preprocessing)
 
 ### Optimization Techniques
 
